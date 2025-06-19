@@ -1,0 +1,61 @@
+{
+  "name": "react-recaptcha-v2",
+  "version": "1.0.0",
+  "description": "A lightweight TypeScript library for integrating Google reCAPTCHA v2 with React and Next.js applications",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --minify",
+    "dev": "tsup src/index.ts --format esm,cjs --watch",
+    "lint": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rodleviton/react-recaptcha-v2.git"
+  },
+  "keywords": [
+    "recaptcha",
+    "react",
+    "nextjs",
+    "typescript",
+    "captcha",
+    "security",
+    "app-router"
+  ],
+  "author": "Rodney Leviton",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rodleviton/react-recaptcha-v2/issues"
+  },
+  "homepage": "https://github.com/rodleviton/react-recaptcha-v2#readme",
+  "peerDependencies": {
+    "next": ">=13.0.0",
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "next": "^14.0.0",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0"
+  }
+}

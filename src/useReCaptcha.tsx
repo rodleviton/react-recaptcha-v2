@@ -1,6 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject
+} from 'react';
 import {
   ReCaptchaInstance,
   ReCaptchaOnErrorCallback,
@@ -18,7 +24,7 @@ interface UseReCaptchaReturn {
   /**
    * Reference to the reCAPTCHA container element
    */
-  containerRef: React.RefObject<HTMLDivElement>;
+  containerRef: RefObject<HTMLDivElement | null>;
   
   /**
    * Execute the reCAPTCHA challenge programmatically

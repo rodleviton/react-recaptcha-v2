@@ -29,6 +29,17 @@ import useReCaptcha from './useReCaptcha';
  *   onVerify={handleVerification}
  * />
  * <button onClick={handleSubmit}>Submit Form</button>
+ * 
+ * // Using async/await with executeAsync
+ * const handleSubmitAsync = async () => {
+ *   try {
+ *     const token = await recaptchaRef.current?.executeAsync();
+ *     console.log('Got token:', token);
+ *     // Submit form with token
+ *   } catch (error) {
+ *     console.error('ReCaptcha error:', error);
+ *   }
+ * };
  * ```
  */
 const ReCaptcha = forwardRef<ReCaptchaInstance, ReCaptchaProps>((props, ref) => {
@@ -53,6 +64,7 @@ const ReCaptcha = forwardRef<ReCaptchaInstance, ReCaptchaProps>((props, ref) => 
   const {
     containerRef,
     execute,
+    executeAsync,
     reset,
     getResponse,
     isLoaded,
@@ -77,9 +89,10 @@ const ReCaptcha = forwardRef<ReCaptchaInstance, ReCaptchaProps>((props, ref) => 
   // Expose methods via ref
   useImperativeHandle(ref, () => ({
     execute,
+    executeAsync,
     reset,
     getResponse
-  }), [execute, reset, getResponse]);
+  }), [execute, executeAsync, reset, getResponse]);
 
   // Render the container for reCAPTCHA
   return (

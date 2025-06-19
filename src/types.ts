@@ -132,6 +132,16 @@ export interface ReCaptchaInstance {
    * Programmatically invoke the reCAPTCHA check
    */
   execute: () => void;
+
+  /**
+   * Programmatically invoke the reCAPTCHA check and get the token
+   * as a Promise. Useful for:
+   *
+   * ```ts
+   * const token = await recaptchaRef.current?.executeAsync();
+   * ```
+   */
+  executeAsync: () => Promise<string>;
   
   /**
    * Reset the reCAPTCHA widget

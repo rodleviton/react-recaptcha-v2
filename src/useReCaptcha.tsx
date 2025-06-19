@@ -31,6 +31,18 @@ interface UseReCaptchaReturn {
    * Only works for invisible reCAPTCHA
    */
   execute: () => void;
+
+  /**
+   * Execute the reCAPTCHA challenge and return a Promise that
+   * resolves with the verification token. Useful for:
+   *
+   * ```ts
+   * const token = await executeAsync();
+   * ```
+   *
+   * Only works for invisible reCAPTCHA.
+   */
+  executeAsync: () => Promise<string>;
   
   /**
    * Reset the reCAPTCHA widget
@@ -127,6 +139,12 @@ export const useReCaptcha = ({
   const onExpiredRef = useRef<ReCaptchaOnExpiredCallback | undefined>(onExpired);
   const onErrorRef = useRef<ReCaptchaOnErrorCallback | undefined>(onError);
   const onLoadRef = useRef<(() => void) | undefined>(onLoad);
+
+  // Store resolve/reject for executeAsync
+  const pendingPromiseRef = useRef<{
+    resolve: (token: string) => void;
+    reject: (error: string) => void;
+  } | null>(null);
   
   // Update callback refs when props change
   useEffect(() => {
@@ -179,12 +197,30 @@ export const useReCaptcha = ({
         badge,
         callback: (token: string) => {
           onVerifyRef.current?.(token);
+
+          // Resolve pending promise if executeAsync was used
+          if (pendingPromiseRef.current) {
+            pendingPromiseRef.current.resolve(token);
+            pendingPromiseRef.current = null;
+          }
         },
         'expired-callback': () => {
           onExpiredRef.current?.();
+
+          // Reject pending promise on expiration
+          if (pendingPromiseRef.current) {
+            pendingPromiseRef.current.reject('expired');
+            pendingPromiseRef.current = null;
+          }
         },
         'error-callback': (errorMsg: string) => {
           onErrorRef.current?.(errorMsg);
+
+          // Reject pending promise on error
+          if (pendingPromiseRef.current) {
+            pendingPromiseRef.current.reject(errorMsg);
+            pendingPromiseRef.current = null;
+          }
         }
       });
       
@@ -254,6 +290,29 @@ export const useReCaptcha = ({
     }
   }, []);
   
+  // Execute the challenge and return a Promise that resolves with the token
+  const executeAsync = useCallback((): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const grecaptcha = getGrecaptcha();
+      if (!grecaptcha || widgetIdRef.current === null) {
+        reject('reCAPTCHA not ready');
+        return;
+      }
+
+      pendingPromiseRef.current = { resolve, reject };
+
+      try {
+        grecaptcha.execute(widgetIdRef.current);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        pendingPromiseRef.current = null;
+        setError(errorMessage);
+        onErrorRef.current?.(errorMessage);
+        reject(errorMessage);
+      }
+    });
+  }, []);
+
   // Get the current response token
   const getResponse = useCallback(() => {
     const grecaptcha = getGrecaptcha();
@@ -273,6 +332,7 @@ export const useReCaptcha = ({
     containerRef,
     execute,
     reset,
+    executeAsync,
     getResponse,
     isLoaded,
     isReady,

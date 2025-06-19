@@ -104,6 +104,39 @@ export default function SubmitButton() {
     </>
   );
 }
+
+### Invisible reCAPTCHA with **async/await**
+
+```tsx
+'use client';
+import { ReCaptcha } from 'react-recaptcha-v2';
+import { useRef } from 'react';
+
+export default function SubmitAsync() {
+  const recaptchaRef = useRef<import('react-recaptcha-v2').ReCaptchaInstance>(null);
+
+  const handleSubmit = async () => {
+    try {
+      // 🔑 new executeAsync() returns the token
+      const token = await recaptchaRef.current?.executeAsync();
+      console.log('Verified token:', token);
+      // …send `token` to your API
+    } catch (err) {
+      console.error('reCAPTCHA error', err);
+    }
+  };
+
+  return (
+    <>
+      <ReCaptcha
+        ref={recaptchaRef}
+        siteKey="YOUR_SITE_KEY"
+        size="invisible"
+      />
+      <button onClick={handleSubmit}>Submit form</button>
+    </>
+  );
+}
 ```
 
 ### Using the `useReCaptcha` hook directly
@@ -167,6 +200,7 @@ export default function HookDemo() {
 #### Ref methods (`ReCaptchaInstance`)
 
 * `execute()` – trigger challenge (invisible only)
+* `executeAsync()` – trigger **and** resolve with the token (Promise, invisible only)
 * `reset()` – reset widget
 * `getResponse()` – current token
 
@@ -177,7 +211,7 @@ Same options as `<ReCaptcha>` (minus `className`/`id`) plus:
 | Return value | Type | Description |
 | ------------ | ---- | ----------- |
 | `containerRef` | `Ref<HTMLDivElement>` | Attach to a `<div>` placeholder |
-| `execute`, `reset`, `getResponse` | — | Same methods as ref |
+| `execute`, `executeAsync`, `reset`, `getResponse` | — | Same methods as ref |
 | `isLoaded` | `boolean` | Script finished loading |
 | `isReady` | `boolean` | Widget rendered & usable |
 | `error` | `string \| null` | Error during load/render |

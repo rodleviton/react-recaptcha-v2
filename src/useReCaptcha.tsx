@@ -8,14 +8,12 @@ import {
   type RefObject
 } from 'react';
 import {
-  ReCaptchaInstance,
   ReCaptchaOnErrorCallback,
   ReCaptchaOnExpiredCallback,
   ReCaptchaOnVerifyCallback,
   ReCaptchaProps,
-  WindowWithReCaptcha
 } from './types';
-import { generateUniqueId, getGrecaptcha, loadReCaptchaScript, onReCaptchaLoad } from './utils';
+import { getGrecaptcha, loadReCaptchaScript, onReCaptchaLoad } from './utils';
 
 /**
  * Hook return type with reCAPTCHA instance and state
@@ -127,7 +125,6 @@ export const useReCaptcha = ({
   // Create refs for DOM element and widget ID
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<number | null>(null);
-  const containerId = useRef<string>(generateUniqueId());
   
   // Track loading and ready state
   const [isLoaded, setIsLoaded] = useState<boolean>(false);

@@ -329,7 +329,7 @@ export const useReCaptcha = ({
           pendingPromiseRef.current = null;
         }
         clearExecuteTimeout();
-      }, 10_000); // 10 s
+      }, 120_000); // 2 min
 
       try {
         grecaptcha.execute(widgetIdRef.current);

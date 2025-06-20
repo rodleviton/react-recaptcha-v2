@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { WindowWithReCaptcha } from './types';
+import { WindowWithReCaptcha } from "./types";
 
 /**
  * Default URL for loading the Google reCAPTCHA script
  */
-const RECAPTCHA_SCRIPT_URL = 'https://www.google.com/recaptcha/api.js';
+const RECAPTCHA_SCRIPT_URL = "https://www.google.com/recaptcha/api.js";
 
 /**
  * Script loading states
  */
-type ScriptLoadingState = 'unloaded' | 'loading' | 'loaded' | 'error';
+type ScriptLoadingState = "unloaded" | "loading" | "loaded" | "error";
 
 /**
  * Global state to track reCAPTCHA script loading
  */
-let scriptLoadingState: ScriptLoadingState = 'unloaded';
+let scriptLoadingState: ScriptLoadingState = "unloaded";
 let scriptLoadPromise: Promise<void> | null = null;
 let callbacks: Array<() => void> = [];
 
@@ -32,7 +32,7 @@ export const generateUniqueId = (): string => {
  * @returns True if the script is loaded and grecaptcha is available
  */
 export const isReCaptchaAvailable = (): boolean => {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   return !!(window as WindowWithReCaptcha).grecaptcha;
 };
 
@@ -45,22 +45,22 @@ export const isReCaptchaAvailable = (): boolean => {
  */
 let globalRejectionHandlerAttached = false;
 const attachUnhandledRejectionHandler = () => {
-  if (typeof window === 'undefined' || globalRejectionHandlerAttached) return;
+  if (typeof window === "undefined" || globalRejectionHandlerAttached) return;
 
-  window.addEventListener('unhandledrejection', (event) => {
+  window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
 
     // Convert reason to string for inspection
     const message =
-      typeof reason === 'string'
+      typeof reason === "string"
         ? reason
         : reason instanceof Error
-        ? reason.message || ''
-        : '';
+        ? reason.message || ""
+        : "";
 
     // Silently consume errors that look like they're coming from
     // Google's reCAPTCHA bundle.
-    if (message.toLowerCase().includes('recaptcha')) {
+    if (message.toLowerCase().includes("recaptcha")) {
       event.preventDefault();
     }
   });
@@ -75,7 +75,7 @@ const attachUnhandledRejectionHandler = () => {
  */
 export const loadReCaptchaScript = (language?: string): Promise<void> => {
   // Return early if we're in a server environment
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return Promise.resolve();
   }
 
@@ -83,53 +83,53 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
   attachUnhandledRejectionHandler();
 
   // If the script is already loaded, resolve immediately
-  if (isReCaptchaAvailable() && scriptLoadingState === 'loaded') {
+  if (isReCaptchaAvailable() && scriptLoadingState === "loaded") {
     return Promise.resolve();
   }
 
   // If the script is currently loading, return the existing promise
-  if (scriptLoadPromise && scriptLoadingState === 'loading') {
+  if (scriptLoadPromise && scriptLoadingState === "loading") {
     return scriptLoadPromise;
   }
 
   // Create a new promise to load the script
-  scriptLoadingState = 'loading';
+  scriptLoadingState = "loading";
   scriptLoadPromise = new Promise<void>((resolve, reject) => {
     try {
       // Create script element
-      const script = document.createElement('script');
+      const script = document.createElement("script");
       script.async = true;
       script.defer = true;
-      
+
       // Build the script URL with language parameter if provided
       let scriptUrl = RECAPTCHA_SCRIPT_URL;
       if (language) {
         scriptUrl += `?hl=${language}`;
       }
-      
+
       script.src = scriptUrl;
-      
+
       // Set up event handlers
       script.onload = () => {
         // Ensure grecaptcha exists; if not, reject immediately
         if (!(window as WindowWithReCaptcha).grecaptcha) {
-          scriptLoadingState = 'error';
+          scriptLoadingState = "error";
           reject(
             new Error(
-              'reCAPTCHA script loaded, but grecaptcha object is not available.'
+              "reCAPTCHA script loaded, but grecaptcha object is not available."
             )
           );
           return;
         }
 
-        scriptLoadingState = 'loaded';
-        
+        scriptLoadingState = "loaded";
+
         // Wait for grecaptcha to be fully initialized
         const checkGrecaptcha = () => {
           if ((window as WindowWithReCaptcha).grecaptcha) {
             (window as WindowWithReCaptcha).grecaptcha?.ready(() => {
               // Execute all callbacks
-              callbacks.forEach(callback => callback());
+              callbacks.forEach((callback) => callback());
               callbacks = [];
               resolve();
             });
@@ -137,21 +137,19 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
             setTimeout(checkGrecaptcha, 100);
           }
         };
-        
+
         checkGrecaptcha();
       };
-      
+
       script.onerror = (error) => {
-        scriptLoadingState = 'error';
-        reject(
-          new Error('Failed to load reCAPTCHA script from Google.')
-        );
+        scriptLoadingState = "error";
+        reject(new Error("Failed to load reCAPTCHA script from Google."));
       };
-      
+
       // Append the script to the document head
       document.head.appendChild(script);
     } catch (error) {
-      scriptLoadingState = 'error';
+      scriptLoadingState = "error";
       reject(error);
     }
   });
@@ -164,9 +162,9 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
  * @param callback Function to execute when reCAPTCHA is ready
  */
 export const onReCaptchaLoad = (callback: () => void): void => {
-  if (typeof window === 'undefined') return;
-  
-  if (isReCaptchaAvailable() && scriptLoadingState === 'loaded') {
+  if (typeof window === "undefined") return;
+
+  if (isReCaptchaAvailable() && scriptLoadingState === "loaded") {
     // If already loaded, execute immediately
     callback();
   } else {
@@ -188,6 +186,6 @@ export const getScriptLoadingState = (): ScriptLoadingState => {
  * @returns The grecaptcha object or null if not available
  */
 export const getGrecaptcha = () => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   return (window as WindowWithReCaptcha).grecaptcha || null;
 };

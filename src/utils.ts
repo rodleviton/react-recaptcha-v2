@@ -76,6 +76,16 @@ const attachUnhandledRejectionHandler = () => {
   globalRejectionHandlerAttached = true;
 };
 
+/* -------------------------------------------------------------------------- */
+/*  Attach the global rejection handler immediately when this module loads.   */
+/*  Doing this at module scope ensures it runs before Next.js dev-overlay     */
+/*  installs its own listeners, giving us the first chance to silence the     */
+/*  known benign “Timeout” rejections from Google’s reCAPTCHA bundle.         */
+/* -------------------------------------------------------------------------- */
+if (typeof window !== "undefined") {
+  attachUnhandledRejectionHandler();
+}
+
 /**
  * Load the reCAPTCHA script with the specified language
  * @param language Optional language code for reCAPTCHA localization
@@ -86,9 +96,6 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
   if (typeof window === "undefined") {
     return Promise.resolve();
   }
-
-  // Ensure global handler is attached exactly once
-  attachUnhandledRejectionHandler();
 
   // If the script is already loaded, resolve immediately
   if (isReCaptchaAvailable() && scriptLoadingState === "loaded") {

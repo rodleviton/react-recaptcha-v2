@@ -237,6 +237,7 @@ import {
 | *`grecaptcha not defined`* | You are calling methods before `isReady` is `true`. |
 | *Badge hidden warning* | If you set `hideBadge`, show your own disclosure per Google ToS. |
 | *Multiple script tags* | Library guards against double-injection; if you add `<script>` manually, remove it. |
+| *`Uncaught (in promise) Timeout` from `recaptcha__*.js`* | This is an intermittent internal timeout thrown by Google’s script. The library installs a global `unhandledrejection` listener that silently swallows these reCAPTCHA-specific rejections so they don’t spam your console and do **not** affect verification. |
 
 ---
 

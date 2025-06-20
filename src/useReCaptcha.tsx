@@ -141,6 +141,22 @@ export const useReCaptcha = ({
     resolve: (token: string) => void;
     reject: (error: string) => void;
   } | null>(null);
+
+  /**
+   * When `executeAsync` is used we start a timeout so callers are not left with
+   * a Promise that hangs forever if Google's script never responds.  The timer
+   * id is stored in a ref so we can cancel it once the widget actually returns
+   * a result (verify, expired, or error).
+   */
+  const executeTimeoutRef = useRef<number | null>(null);
+
+  /** Clears the pending timeout, if any. */
+  const clearExecuteTimeout = () => {
+    if (executeTimeoutRef.current !== null) {
+      clearTimeout(executeTimeoutRef.current);
+      executeTimeoutRef.current = null;
+    }
+  };
   
   // Update callback refs when props change
   useEffect(() => {
@@ -166,9 +182,11 @@ export const useReCaptcha = ({
       
       return () => {
         // Remove style when component unmounts
-        if (style && style.parentNode) {
-          style.parentNode.removeChild(style);
+        if (widgetIdRef.current !== null && getGrecaptcha()) {
+          getGrecaptcha()?.reset(widgetIdRef.current);
         }
+        // Also clear any pending executeAsync timeout
+        clearExecuteTimeout();
       };
     }
   }, [hideBadge]);
@@ -199,6 +217,7 @@ export const useReCaptcha = ({
             pendingPromiseRef.current.resolve(token);
             pendingPromiseRef.current = null;
           }
+          clearExecuteTimeout();
         },
         'expired-callback': () => {
           onExpiredRef.current?.();
@@ -208,6 +227,7 @@ export const useReCaptcha = ({
             pendingPromiseRef.current.reject('expired');
             pendingPromiseRef.current = null;
           }
+          clearExecuteTimeout();
         },
         'error-callback': (errorMsg: string) => {
           onErrorRef.current?.(errorMsg);
@@ -217,6 +237,7 @@ export const useReCaptcha = ({
             pendingPromiseRef.current.reject(errorMsg);
             pendingPromiseRef.current = null;
           }
+          clearExecuteTimeout();
         }
       });
       
@@ -256,7 +277,7 @@ export const useReCaptcha = ({
         getGrecaptcha()?.reset(widgetIdRef.current);
       }
     };
-  }, [autoLoad, language, renderReCaptcha]);
+  }, [autoLoad, language, renderReCaptcha, clearExecuteTimeout]);
   
   // Execute the reCAPTCHA challenge programmatically
   const execute = useCallback(() => {
@@ -292,10 +313,23 @@ export const useReCaptcha = ({
       const grecaptcha = getGrecaptcha();
       if (!grecaptcha || widgetIdRef.current === null) {
         reject('reCAPTCHA not ready');
+        clearExecuteTimeout();
         return;
       }
 
       pendingPromiseRef.current = { resolve, reject };
+      /* ------------------------------------------------------------------
+       * Start a 10-second timeout.  If Google's script never responds,
+       * reject the promise so callers aren't left hanging forever.
+       * ------------------------------------------------------------------ */
+      clearExecuteTimeout(); // just in case
+      executeTimeoutRef.current = window.setTimeout(() => {
+        if (pendingPromiseRef.current) {
+          pendingPromiseRef.current.reject('timeout');
+          pendingPromiseRef.current = null;
+        }
+        clearExecuteTimeout();
+      }, 10_000); // 10 s
 
       try {
         grecaptcha.execute(widgetIdRef.current);
@@ -305,6 +339,7 @@ export const useReCaptcha = ({
         setError(errorMessage);
         onErrorRef.current?.(errorMessage);
         reject(errorMessage);
+        clearExecuteTimeout();
       }
     });
   }, []);

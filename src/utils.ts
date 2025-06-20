@@ -37,6 +37,38 @@ export const isReCaptchaAvailable = (): boolean => {
 };
 
 /**
+ * Attach a single global `unhandledrejection` handler to swallow
+ * reCAPTCHA-specific promise rejections (e.g. sporadic \"Timeout\"
+ * errors coming from Google's `recaptcha__*.js`).  These errors are
+ * noise for most apps and cannot be handled at the library level, so
+ * we prevent them from surfacing in the console.
+ */
+let globalRejectionHandlerAttached = false;
+const attachUnhandledRejectionHandler = () => {
+  if (typeof window === 'undefined' || globalRejectionHandlerAttached) return;
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason;
+
+    // Convert reason to string for inspection
+    const message =
+      typeof reason === 'string'
+        ? reason
+        : reason instanceof Error
+        ? reason.message || ''
+        : '';
+
+    // Silently consume errors that look like they're coming from
+    // Google's reCAPTCHA bundle.
+    if (message.toLowerCase().includes('recaptcha')) {
+      event.preventDefault();
+    }
+  });
+
+  globalRejectionHandlerAttached = true;
+};
+
+/**
  * Load the reCAPTCHA script with the specified language
  * @param language Optional language code for reCAPTCHA localization
  * @returns A promise that resolves when the script is loaded
@@ -46,6 +78,9 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
   if (typeof window === 'undefined') {
     return Promise.resolve();
   }
+
+  // Ensure global handler is attached exactly once
+  attachUnhandledRejectionHandler();
 
   // If the script is already loaded, resolve immediately
   if (isReCaptchaAvailable() && scriptLoadingState === 'loaded') {

@@ -151,12 +151,12 @@ export const useReCaptcha = ({
   const executeTimeoutRef = useRef<number | null>(null);
 
   /** Clears the pending timeout, if any. */
-  const clearExecuteTimeout = () => {
+  const clearExecuteTimeout = useCallback(() => {
     if (executeTimeoutRef.current !== null) {
       clearTimeout(executeTimeoutRef.current);
       executeTimeoutRef.current = null;
     }
-  };
+  }, []);
   
   // Update callback refs when props change
   useEffect(() => {
@@ -189,7 +189,7 @@ export const useReCaptcha = ({
         clearExecuteTimeout();
       };
     }
-  }, [hideBadge]);
+  }, [hideBadge, clearExecuteTimeout]);
   
   // Render the reCAPTCHA widget
   const renderReCaptcha = useCallback(() => {
@@ -248,7 +248,7 @@ export const useReCaptcha = ({
       setError(errorMessage);
       onErrorRef.current?.(errorMessage);
     }
-  }, [siteKey, theme, size, tabIndex, badge]);
+  }, [siteKey, theme, size, tabIndex, badge, clearExecuteTimeout]); // Added clearExecuteTimeout to dependency array
   
   // Load the reCAPTCHA script and render the widget
   useEffect(() => {
@@ -342,7 +342,7 @@ export const useReCaptcha = ({
         clearExecuteTimeout();
       }
     });
-  }, []);
+  }, [clearExecuteTimeout]); // Added clearExecuteTimeout to dependency array
 
   // Get the current response token
   const getResponse = useCallback(() => {

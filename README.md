@@ -238,6 +238,7 @@ import {
 | *Badge hidden warning* | If you set `hideBadge`, show your own disclosure per Google ToS. |
 | *Multiple script tags* | Library guards against double-injection; if you add `<script>` manually, remove it. |
 | *`Uncaught (in promise) Timeout` from `recaptcha__*.js`* | This is an intermittent internal timeout thrown by Google’s script. The library installs a global `unhandledrejection` listener that silently swallows these reCAPTCHA-specific rejections so they don’t spam your console and do **not** affect verification. |
+| *`ERR_CONNECTION_CLOSED` / ad-blocker / network failure while fetching Google assets* | If Google’s `api.js`, `recaptcha__*.js`, or CSS fails to download, the library’s script loader rejects with a clear message (e.g. *“Failed to load reCAPTCHA script from Google.”*). You can surface this via the `error` value returned by `useReCaptcha` or the `onError` prop to display a fallback or ask the user to disable blocking extensions. |
 
 ---
 

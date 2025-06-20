@@ -111,6 +111,17 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
       
       // Set up event handlers
       script.onload = () => {
+        // Ensure grecaptcha exists; if not, reject immediately
+        if (!(window as WindowWithReCaptcha).grecaptcha) {
+          scriptLoadingState = 'error';
+          reject(
+            new Error(
+              'reCAPTCHA script loaded, but grecaptcha object is not available.'
+            )
+          );
+          return;
+        }
+
         scriptLoadingState = 'loaded';
         
         // Wait for grecaptcha to be fully initialized
@@ -132,7 +143,9 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
       
       script.onerror = (error) => {
         scriptLoadingState = 'error';
-        reject(new Error(`Failed to load reCAPTCHA script: ${error}`));
+        reject(
+          new Error('Failed to load reCAPTCHA script from Google.')
+        );
       };
       
       // Append the script to the document head

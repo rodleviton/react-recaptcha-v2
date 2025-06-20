@@ -52,7 +52,7 @@ const attachUnhandledRejectionHandler = () => {
 
     // Only silence very specific reCAPTCHA-internal timeout rejections
     if (reason instanceof Error) {
-      const isTimeoutMsg = reason.message === "Timeout";
+      const isTimeoutMsg = reason.message.toLowerCase().includes("timeout");
       const stack =
         typeof reason.stack === "string" ? reason.stack.toLowerCase() : "";
       const isFromRecaptcha =
@@ -62,13 +62,16 @@ const attachUnhandledRejectionHandler = () => {
 
       if (isTimeoutMsg && isFromRecaptcha) {
         event.preventDefault();
+        // Stop other listeners (e.g. Next.js dev-overlay) from seeing it
+        event.stopImmediatePropagation();
       }
     } else if (typeof reason === "string") {
       // Some environments/browser versions may surface the timeout as a raw
       // string instead of an Error instance.  Silence the exact same
       // reCAPTCHA-internal "Timeout" message to keep the console clean.
-      if (reason.toLowerCase() === "timeout") {
+      if (reason.toLowerCase().includes("timeout")) {
         event.preventDefault();
+        event.stopImmediatePropagation();
       }
     }
   });

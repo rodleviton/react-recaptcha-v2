@@ -63,6 +63,13 @@ const attachUnhandledRejectionHandler = () => {
       if (isTimeoutMsg && isFromRecaptcha) {
         event.preventDefault();
       }
+    } else if (typeof reason === "string") {
+      // Some environments/browser versions may surface the timeout as a raw
+      // string instead of an Error instance.  Silence the exact same
+      // reCAPTCHA-internal "Timeout" message to keep the console clean.
+      if (reason.toLowerCase() === "timeout") {
+        event.preventDefault();
+      }
     }
   });
 
@@ -166,7 +173,7 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
         checkGrecaptcha();
       };
 
-      script.onerror = (error) => {
+      script.onerror = () => {
         scriptLoadingState = "error";
         reject(new Error("Failed to load reCAPTCHA script from Google."));
       };

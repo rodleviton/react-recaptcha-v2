@@ -284,6 +284,21 @@ export const useReCaptcha = ({
       
     return () => {
       // Clean up widget when component unmounts
+      // 1️⃣ Clear any DOM that reCAPTCHA injected to avoid later
+      //    access attempts inside Google’s script.
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+
+      // 2️⃣ Reject any pending executeAsync promise so caller
+      //    is not left hanging after unmount.
+      if (pendingPromiseRef.current) {
+        pendingPromiseRef.current.reject('ReCaptcha component unmounted');
+        pendingPromiseRef.current = null;
+      }
+      clearExecuteTimeout();
+
+      // 3️⃣ Finally, ask grecaptcha to reset the widget (safe-guard).
       if (widgetIdRef.current !== null && getGrecaptcha()) {
         getGrecaptcha()?.reset(widgetIdRef.current);
       }

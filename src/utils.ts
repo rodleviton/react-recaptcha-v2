@@ -50,30 +50,19 @@ const attachUnhandledRejectionHandler = () => {
   window.addEventListener("unhandledrejection", (event) => {
     const reason = event.reason;
 
-    // Convert reason to string for inspection
-    const message =
-      typeof reason === "string"
-        ? reason
-        : reason instanceof Error
-        ? reason.message || ""
-        : "";
+    // Only silence very specific reCAPTCHA-internal timeout rejections
+    if (reason instanceof Error) {
+      const isTimeoutMsg = reason.message === "Timeout";
+      const stack =
+        typeof reason.stack === "string" ? reason.stack.toLowerCase() : "";
+      const isFromRecaptcha =
+        stack.includes("recaptcha") ||
+        stack.includes("gstatic") ||
+        stack.includes("google.com/recaptcha");
 
-    // Also look at the stack trace if it's available
-    const stack =
-      reason instanceof Error && typeof reason.stack === "string"
-        ? reason.stack
-        : "";
-
-    const haystacks = `${message}\n${stack}`.toLowerCase();
-
-    // Silently consume errors that look like they're coming from
-    // Google's reCAPTCHA bundle.
-    if (
-      haystacks.includes("recaptcha") ||
-      haystacks.includes("gstatic") ||
-      haystacks.includes("google.com/recaptcha")
-    ) {
-      event.preventDefault();
+      if (isTimeoutMsg && isFromRecaptcha) {
+        event.preventDefault();
+      }
     }
   });
 

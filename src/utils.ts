@@ -137,14 +137,38 @@ export const loadReCaptchaScript = (language?: string): Promise<void> => {
         scriptLoadingState = "loaded";
 
         // Wait for grecaptcha to be fully initialized
+        let readyTimeoutId: number | null = null;
         const checkGrecaptcha = () => {
           if ((window as WindowWithReCaptcha).grecaptcha) {
-            (window as WindowWithReCaptcha).grecaptcha?.ready(() => {
-              // Execute all callbacks
-              callbacks.forEach((callback) => callback());
-              callbacks = [];
-              resolve();
-            });
+            try {
+              // start a 15-second guard in case grecaptcha.ready never calls back
+              readyTimeoutId = window.setTimeout(() => {
+                scriptLoadingState = "error";
+                reject(
+                  new Error(
+                    "reCAPTCHA ready callback timed out after 15 seconds."
+                  )
+                );
+              }, 15_000);
+
+              (window as WindowWithReCaptcha).grecaptcha?.ready(() => {
+                if (readyTimeoutId !== null) {
+                  clearTimeout(readyTimeoutId);
+                  readyTimeoutId = null;
+                }
+                // Execute all callbacks
+                callbacks.forEach((callback) => callback());
+                callbacks = [];
+                resolve();
+              });
+            } catch (err) {
+              if (readyTimeoutId !== null) {
+                clearTimeout(readyTimeoutId);
+                readyTimeoutId = null;
+              }
+              scriptLoadingState = "error";
+              reject(err);
+            }
           } else {
             setTimeout(checkGrecaptcha, 100);
           }

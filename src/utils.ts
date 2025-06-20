@@ -58,9 +58,21 @@ const attachUnhandledRejectionHandler = () => {
         ? reason.message || ""
         : "";
 
+    // Also look at the stack trace if it's available
+    const stack =
+      reason instanceof Error && typeof reason.stack === "string"
+        ? reason.stack
+        : "";
+
+    const haystacks = `${message}\n${stack}`.toLowerCase();
+
     // Silently consume errors that look like they're coming from
     // Google's reCAPTCHA bundle.
-    if (message.toLowerCase().includes("recaptcha")) {
+    if (
+      haystacks.includes("recaptcha") ||
+      haystacks.includes("gstatic") ||
+      haystacks.includes("google.com/recaptcha")
+    ) {
       event.preventDefault();
     }
   });

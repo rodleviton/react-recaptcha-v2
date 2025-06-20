@@ -81,7 +81,6 @@ const ReCaptcha = forwardRef<ReCaptchaInstance, ReCaptchaProps>((props, ref) => 
     onExpired,
     onError,
     onLoad,
-    explicit,
     autoLoad: !explicit,
     hideBadge
   });

@@ -118,7 +118,6 @@ export const useReCaptcha = ({
   onExpired,
   onError,
   onLoad,
-  explicit = false,
   autoLoad = true,
   hideBadge = false
 }: UseReCaptchaOptions): UseReCaptchaReturn => {

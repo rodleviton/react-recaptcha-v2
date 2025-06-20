@@ -267,6 +267,17 @@ export const useReCaptcha = ({
       })
       .catch((err) => {
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // Swallow intermittent reCAPTCHA internal **timeout** noise so it
+        // doesn’t surface as an error in the host app.  All other errors
+        // (network, ad-blocker, etc.) are still bubbled up.
+        const lower = errorMessage.toLowerCase();
+        const isInternalTimeout =
+          lower.includes('recaptcha') && lower.includes('timeout');
+
+        if (isInternalTimeout) {
+          return; // ignore this specific noise
+        }
+
         setError(errorMessage);
         onErrorRef.current?.(errorMessage);
       });
